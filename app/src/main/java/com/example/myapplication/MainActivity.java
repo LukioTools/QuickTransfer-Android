@@ -35,8 +35,10 @@ public class MainActivity extends AppCompatActivity {
     TextView log;
     ProgressBar progressBar;
     EditText ipTextField;
+    EditText keyTextField;
 
     String ip = "http://192.168.2.89:8080/postback";
+    String key = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +53,14 @@ public class MainActivity extends AppCompatActivity {
         log = (TextView)findViewById(R.id.log);
         progressBar = (ProgressBar)findViewById(R.id.progressBar);
         ipTextField = (EditText)findViewById(R.id.ipField);
+        keyTextField = (EditText)findViewById(R.id.keyField);
 
         progressBar.setVisibility(View.GONE);
 
-        ipTextField.setText(sharedPref.getString("ip", ""));
+        ip = sharedPref.getString("ip", "");
+        ipTextField.setText(ip);
+        key = sharedPref.getString("key", "");
+        keyTextField.setText(key);
 
         ipTextField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -66,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 ip = ipTextField.getText().toString();
                 sharedPref.edit().putString("ip",ip).commit();
-                System.out.println(ip);
             }
 
             @Override
@@ -74,6 +79,24 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        keyTextField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                key = keyTextField.getText().toString();
+                sharedPref.edit().putString("key", key).commit();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
 
 
         if (intent != null && intent.hasExtra("android.intent.extra.STREAM")){
@@ -84,7 +107,9 @@ public class MainActivity extends AppCompatActivity {
 
             //new WebRequestPost().execute(getFileName(uri), ip);
             File f = new File(getFileName(uri));
-            new FileUploader(progressBar, ip).execute(f);
+            System.out.println("ip: " + ip);
+            System.out.println("key: " + key);
+            new FileUploader(progressBar, ip, key).execute(f);
 
         }
     }

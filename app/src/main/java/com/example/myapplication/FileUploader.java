@@ -9,6 +9,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -16,12 +17,13 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
 
     private static final String TAG = "FileUploader";
     private String SERVER_URL = "http://192.168.2.89:8080/postback"; // Change this to your server URL
-
+    private String KEY = "";
     private ProgressBar progressBar;
 
-    public FileUploader(ProgressBar progressBar, String server_url){
+    public FileUploader(ProgressBar progressBar, String server_url, String key) {
         this.progressBar = progressBar;
         this.SERVER_URL = server_url;
+        this.KEY = key;
     }
 
     @Override
@@ -42,16 +44,55 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
             return null;
 
         File file = files[0];
-        String[] filenameparts = files[0].toString().split("/");
+        if (validateKey()) {
+            uploadFile(file);
+        } else {
+            Log.e(TAG, "Invalid key.");
+        }
+
+        return null;
+    }
+
+    private boolean validateKey() {
+        try {
+            URL url = new URL(SERVER_URL);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("key", KEY);
+            connection.setRequestProperty("validate", "true");
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+
+            // Write a dummy request to trigger key validation
+            OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+            writer.write("");
+            writer.flush();
+            writer.close();
+
+            // Get response
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 401) {
+                Log.e(TAG, "Key validation failed: " + responseCode);
+                return false;
+            } else {
+                return true; // Key is valid
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Error validating key: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void uploadFile(File file) {
+        String[] filenameparts = file.toString().split("/");
         String filename = filenameparts[filenameparts.length - 1];
-        System.out.println(files[0]);
 
         try {
             // Open a connection to the server
             URL url = new URL(SERVER_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Cookie", filename);
-            //connection.setRequestProperty("key", "hello");
+            connection.setRequestProperty("key", KEY);
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
 
@@ -64,8 +105,6 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
             int bytesRead;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
-                System.out.println("Writing...");
-
             }
             fileInputStream.close();
 
@@ -76,8 +115,8 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
             // Get the response from the server (optional)
             int responseCode = connection.getResponseCode();
             String responseMessage = connection.getResponseMessage();
-            System.out.println(responseCode);
-            System.out.println(responseMessage);
+            Log.d(TAG, "Response Code: " + responseCode);
+            Log.d(TAG, "Response Message: " + responseMessage);
 
             // Disconnect the connection
             connection.disconnect();
@@ -85,7 +124,5 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
         } catch (IOException e) {
             Log.e(TAG, "Error uploading file: " + e.getMessage());
         }
-
-        return null;
     }
 }
