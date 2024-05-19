@@ -48,13 +48,6 @@ public class LoginRequest extends AsyncTask<String, Void, Void> {
             connection.setRequestMethod("GET");
             connection.setRequestProperty("username", USERNAME);
             connection.setRequestProperty("password", PASSWORD);
-            connection.setDoOutput(true);
-            connection.setDoInput(true);
-
-            OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-            writer.write("");
-            writer.flush();
-            writer.close();
 
             int responseCode = connection.getResponseCode();
 
@@ -66,7 +59,7 @@ public class LoginRequest extends AsyncTask<String, Void, Void> {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println(e);
         }
         return null;
     }

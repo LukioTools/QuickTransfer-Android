@@ -93,19 +93,11 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
 
     private boolean validateUser() {
         try {
-            URL url = new URL(SERVER_URL_POSTBACK);
+            URL url = new URL(SERVER_URL_VERIFY);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
+            connection.setRequestMethod("GET");
             connection.setRequestProperty("username", USERNAME);
             connection.setRequestProperty("password", PASSWORD);
-            connection.setDoOutput(true);
-            connection.setDoInput(true);
-
-            // Write a dummy request to trigger key validation
-            OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-            writer.write("");
-            writer.flush();
-            writer.close();
 
             // Get response
             int responseCode = connection.getResponseCode();
