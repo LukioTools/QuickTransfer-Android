@@ -47,8 +47,17 @@ public class MainActivity extends AppCompatActivity {
         Activity act = this;
         Intent intent = act.getIntent();
 
-        setContentView(R.layout.login_layouy);
-        LoginScreen(act);
+        SharedPreferences sharedPref = act.getSharedPreferences("data", MODE_PRIVATE);
+
+        username = sharedPref.getString("username", "");
+
+        if(username == "") {
+            setContentView(R.layout.login_layouy);
+            LoginScreen(act);
+        }else {
+            password = sharedPref.getString("password", "");
+            SendScreen(act);
+        }
 
     }
 
@@ -60,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         EditText ip_field = (EditText)findViewById(R.id.ipField_login);
 
         Button login = (Button)findViewById(R.id.login_btn);
-        Button singupå = (Button)findViewById(R.id.singup_btn);
+        Button singup = (Button)findViewById(R.id.singup_btn);
 
         ip = sharedPref.getString("ip", "");
         ip_field.setText(ip);
@@ -121,8 +130,20 @@ public class MainActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("loginin...");
-                new LoginRequest(username, password, ip + "verifyUser", act).execute("");
+                if (username != "" && password != "") {
+                    System.out.println("loginin...");
+                    new LoginRequest(username, password, ip + "verifyUser", act).execute("");
+                }
+            }
+        });
+
+        singup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (username != "" && password != "") {
+                    System.out.println("singing up...");
+                    new singupReguest(username, password, ip + "singup", act).execute("");
+                }
             }
         });
     }
@@ -134,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
         log = (TextView)findViewById(R.id.log);
         ProgressBar progressBar = (ProgressBar)findViewById(R.id.progressBar);
         EditText ipTextField = (EditText)findViewById(R.id.ipField_Main);
+        Button logoutButton = (Button)findViewById(R.id.logout);
 
 
         progressBar.setVisibility(View.GONE);
@@ -162,6 +184,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sharedPref.edit().putString("username", "").commit();
+                sharedPref.edit().putString("password", "").commit();
+                setContentView(R.layout.login_layouy);
+                LoginScreen(act);
+            }
+        });
 
         if (intent != null && intent.hasExtra("android.intent.extra.STREAM")){
             Uri uri = intent.getParcelableExtra("android.intent.extra.STREAM");
