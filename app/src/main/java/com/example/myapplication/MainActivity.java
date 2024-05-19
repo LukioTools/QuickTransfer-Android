@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
             //new WebRequestPost().execute(getFileName(uri), ip);
             File f = new File(getFileName(uri));
-            new FileUploader(progressBar, ip, "postback", "singup", "verifyUser", username, password).execute(f);
+            new FileUploader(act, progressBar, ip, "postback", "singup", "verifyUser", username, password).execute(f);
 
         }
     }

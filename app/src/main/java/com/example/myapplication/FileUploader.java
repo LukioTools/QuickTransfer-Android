@@ -1,11 +1,13 @@
 package com.example.myapplication;
 
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,13 +27,16 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
     private String PASSWORD = "";
     private ProgressBar progressBar;
 
-    public FileUploader(ProgressBar progressBar, String server_URL, String Postback_URL, String SingUp_URL, String UsrAuth, String username, String passowrd) {
+    private Activity activity;
+
+    public FileUploader(Activity act, ProgressBar progressBar, String server_URL, String Postback_URL, String SingUp_URL, String UsrAuth, String username, String passowrd) {
         this.progressBar = progressBar;
         this.SERVER_URL_POSTBACK = server_URL + Postback_URL;
         this.SERVER_URL_SINGUP = server_URL + SingUp_URL;
         this.SERVER_URL_VERIFY = server_URL + UsrAuth;
         this.USERNAME = username;
         this.PASSWORD = passowrd;
+        this.activity = act;
     }
 
     @Override
@@ -55,11 +60,15 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
 
         //createAccount();
 
-
-        if (validateUser()) {
+        boolean val = validateUser();
+        System.out.println("validation: " + val);
+        if (val) {
             uploadFile(file);
         } else {
-            Log.e(TAG, "Invalid key.");
+            activity.setContentView(R.layout.activity_main);
+            if (activity instanceof MainActivity){
+                ((MainActivity) activity).LoginScreen(activity);
+            }
         }
 
         return null;
@@ -145,8 +154,8 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
             // Get the response from the server (optional)
             int responseCode = connection.getResponseCode();
             String responseMessage = connection.getResponseMessage();
-            Log.d(TAG, "Response Code: " + responseCode);
-            Log.d(TAG, "Response Message: " + responseMessage);
+            Log.d(TAG, "Upload file response Code: " + responseCode);
+            Log.d(TAG, "Upload file Response Message: " + responseMessage);
 
             // Disconnect the connection
             connection.disconnect();

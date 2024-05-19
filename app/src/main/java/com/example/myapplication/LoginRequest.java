@@ -42,7 +42,6 @@ public class LoginRequest extends AsyncTask<String, Void, Void> {
     @Override
     protected Void doInBackground(String... string) {
         try {
-            System.out.println("Login url: " + Login_URL);
             URL url = new URL(Login_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
