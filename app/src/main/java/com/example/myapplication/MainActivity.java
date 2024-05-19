@@ -15,6 +15,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -33,34 +34,115 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
     TextView log;
-    ProgressBar progressBar;
-    EditText ipTextField;
-    EditText keyTextField;
 
-    String ip = "http://192.168.2.89:8080/postback";
-    String key = "";
+    String ip = "http://192.168.2.89:8080/";
+
+    String username = "";
+    String password = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        System.out.println(".....");
         Activity act = this;
         Intent intent = act.getIntent();
 
+        setContentView(R.layout.login_layouy);
+        LoginScreen(act);
+
+    }
+
+    void LoginScreen(Activity act){
+        SharedPreferences sharedPref = act.getSharedPreferences("data", MODE_PRIVATE);
+
+        EditText username_field = (EditText)findViewById(R.id.username);
+        EditText password_field = (EditText)findViewById(R.id.password);
+        EditText ip_field = (EditText)findViewById(R.id.ipField_login);
+
+        Button login = (Button)findViewById(R.id.login_btn);
+        Button singupå = (Button)findViewById(R.id.singup_btn);
+
+        ip = sharedPref.getString("ip", "");
+        ip_field.setText(ip);
+
+        username_field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                username = username_field.getText().toString();
+                sharedPref.edit().putString("username", username).commit();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        password_field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                password = password_field.getText().toString();
+                sharedPref.edit().putString("password", password).commit();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        ip_field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                ip = ip_field.getText().toString();
+                sharedPref.edit().putString("ip",ip).commit();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                System.out.println("loginin...");
+                new LoginRequest(username, password, ip + "verifyUser", act).execute("");
+            }
+        });
+    }
+
+    public void SendScreen(Activity act){
+        Intent intent = act.getIntent();
         SharedPreferences sharedPref = act.getSharedPreferences("data", MODE_PRIVATE);
 
         log = (TextView)findViewById(R.id.log);
-        progressBar = (ProgressBar)findViewById(R.id.progressBar);
-        ipTextField = (EditText)findViewById(R.id.ipField);
-        keyTextField = (EditText)findViewById(R.id.keyField);
+        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        EditText ipTextField = (EditText)findViewById(R.id.ipField_Main);
+
 
         progressBar.setVisibility(View.GONE);
 
         ip = sharedPref.getString("ip", "");
         ipTextField.setText(ip);
-        key = sharedPref.getString("key", "");
-        keyTextField.setText(key);
+
+        username = sharedPref.getString("username", "");
+        password = sharedPref.getString("password", "");
 
         ipTextField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -79,37 +161,15 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        keyTextField.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                key = keyTextField.getText().toString();
-                sharedPref.edit().putString("key", key).commit();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
 
 
         if (intent != null && intent.hasExtra("android.intent.extra.STREAM")){
             Uri uri = intent.getParcelableExtra("android.intent.extra.STREAM");
-            System.out.println(".....");
             log.setText(uri.getPath());
-            System.out.println(uri.getPath());
 
             //new WebRequestPost().execute(getFileName(uri), ip);
             File f = new File(getFileName(uri));
-            System.out.println("ip: " + ip);
-            System.out.println("key: " + key);
-            new FileUploader(progressBar, ip, key).execute(f);
+            new FileUploader(progressBar, ip, "postback", "singup", "verifyUser", username, password).execute(f);
 
         }
     }

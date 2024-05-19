@@ -5,10 +5,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -16,14 +18,20 @@ import java.net.URL;
 public class FileUploader extends AsyncTask<File, Void, Void> {
 
     private static final String TAG = "FileUploader";
-    private String SERVER_URL = "http://192.168.2.89:8080/postback"; // Change this to your server URL
-    private String KEY = "";
+    private String SERVER_URL_POSTBACK = ""; // Change this to your server URL
+    private String SERVER_URL_SINGUP = ""; // Change this to your server URL
+    private String SERVER_URL_VERIFY = ""; // Change this to your server URL
+    private String USERNAME = "";
+    private String PASSWORD = "";
     private ProgressBar progressBar;
 
-    public FileUploader(ProgressBar progressBar, String server_url, String key) {
+    public FileUploader(ProgressBar progressBar, String server_URL, String Postback_URL, String SingUp_URL, String UsrAuth, String username, String passowrd) {
         this.progressBar = progressBar;
-        this.SERVER_URL = server_url;
-        this.KEY = key;
+        this.SERVER_URL_POSTBACK = server_URL + Postback_URL;
+        this.SERVER_URL_SINGUP = server_URL + SingUp_URL;
+        this.SERVER_URL_VERIFY = server_URL + UsrAuth;
+        this.USERNAME = username;
+        this.PASSWORD = passowrd;
     }
 
     @Override
@@ -44,7 +52,11 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
             return null;
 
         File file = files[0];
-        if (validateKey()) {
+
+        //createAccount();
+
+
+        if (validateUser()) {
             uploadFile(file);
         } else {
             Log.e(TAG, "Invalid key.");
@@ -53,13 +65,39 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
         return null;
     }
 
-    private boolean validateKey() {
+    private void createAccount(String username, String password){
+        try{
+            URL url = new URL(SERVER_URL_SINGUP);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("username", username);
+            connection.setRequestProperty("password", password);
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+
+            BufferedReader br;
+            if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
+                br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            String strCurrentLine;
+            while ((strCurrentLine = br.readLine()) != null) {
+                System.out.println(strCurrentLine);
+            }
+
+        }catch (IOException e){
+
+        }
+    }
+
+    private boolean validateUser() {
         try {
-            URL url = new URL(SERVER_URL);
+            URL url = new URL(SERVER_URL_POSTBACK);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("key", KEY);
-            connection.setRequestProperty("validate", "true");
+            connection.setRequestProperty("username", USERNAME);
+            connection.setRequestProperty("password", PASSWORD);
             connection.setDoOutput(true);
             connection.setDoInput(true);
 
@@ -71,12 +109,12 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
 
             // Get response
             int responseCode = connection.getResponseCode();
-            if (responseCode == 401) {
-                Log.e(TAG, "Key validation failed: " + responseCode);
-                return false;
-            } else {
+
+            if(responseCode == 200) {
                 return true; // Key is valid
             }
+            return false;
+
         } catch (IOException e) {
             Log.e(TAG, "Error validating key: " + e.getMessage());
             return false;
@@ -89,10 +127,10 @@ public class FileUploader extends AsyncTask<File, Void, Void> {
 
         try {
             // Open a connection to the server
-            URL url = new URL(SERVER_URL);
+            URL url = new URL(SERVER_URL_POSTBACK);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Cookie", filename);
-            connection.setRequestProperty("key", KEY);
+            connection.setRequestProperty("username", USERNAME);
+            connection.setRequestProperty("password", PASSWORD);
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
 
